@@ -4,105 +4,50 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Ahmed Khalil | Portfolio</title>
-  <meta name="description" content="Portfolio of Ahmed Khalil, student at the American University in Cairo.">
+  <meta name="description" content="Portfolio of Ahmed Khalil, student at the American University in Cairo. Press a TV to see a project.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <header class="site">
+    <h1>Ahmed Khalil</h1>
+    <p>Student at the American University in Cairo, building websites.</p>
+  </header>
+
   <div class="stage">
-    <main class="wall" id="wall" aria-label="Portfolio menu: choose a TV">
-      <div class="tv tv-welcome wood" role="button" tabindex="0" data-open="about" aria-label="Open About">
+    <main class="wall" id="wall">
+      <div class="tv wood" id="tv-helco" role="button" tabindex="0" aria-label="Open the HELCO project">
         <div class="front">
-          <span class="screen cream"><b>WELCOME</b><i>TO MY PORTFOLIO</i><u>&#9656; CLICK TO ENTER</u></span>
-          <span class="panel"><span class="knob"></span><span class="slots"></span></span>
+          <span class="screen live" id="tv-screen">
+            <iframe src="https://helco-co.github.io/" title="HELCO live preview" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+            <em>HELCO &middot; press to open</em>
+          </span>
+          <span class="panel"><span class="knob"></span><span class="knob"></span><span class="slots"></span></span>
         </div>
       </div>
-
-      <div class="tv tv-skills red" role="button" tabindex="0" data-open="skills" aria-label="Open Skills">
-        <div class="front">
-          <span class="screen noise"><em>SKILLS</em></span>
-          <span class="panel"><span class="slots"></span></span>
-        </div>
-      </div>
-
-      <div class="tv tv-contact red" role="button" tabindex="0" data-open="contact" aria-label="Open Contact">
-        <div class="front">
-          <span class="screen bars"><em>CONTACT</em></span>
-          <span class="panel"><span class="slots"></span></span>
-        </div>
-      </div>
-
-      <div class="tv tv-p1 grey" role="button" tabindex="0" data-open="p1" aria-label="Open HELCO">
-        <div class="front">
-          <span class="screen live"><iframe src="https://helco-co.github.io/" title="HELCO live preview" loading="lazy" tabindex="-1" aria-hidden="true"></iframe><em>HELCO</em></span>
-          <span class="panel"><span class="knob"></span><span class="knob"></span></span>
-        </div>
-      </div>
-      <div class="tv tv-p2 dark" role="button" tabindex="0" data-open="p2" aria-label="Open Tessera">
-        <div class="front">
-          <span class="screen tessera"><em>TESSERA</em></span>
-          <span class="panel"><span class="knob"></span><span class="knob"></span></span>
-        </div>
-      </div>
-      <div class="tv tv-p3 silver" role="button" tabindex="0" data-open="p3" aria-label="Open Project Three">
-        <div class="front">
-          <span class="screen blue"><em>COMING SOON</em></span>
-          <span class="panel"><span class="knob"></span><span class="knob"></span></span>
-        </div>
-      </div>
-
-      <div class="tv tv-mini silver" role="button" tabindex="0" data-open="contact" aria-label="Open Contact">
-        <div class="front">
-          <span class="screen orange"><em>HIRE ME</em></span>
-        </div>
-      </div>
-
-      <a class="phone" href="mailto:ahmedm.khalil@aucegypt.edu" aria-label="Email me"><span>&#9656; pick up!</span></a>
-      <button class="remote" id="remote" aria-label="Toggle dark mode"><i></i><i></i><i></i></button>
     </main>
   </div>
+  <p class="hint">More TVs coming soon. Press the TV to open the project.</p>
 
-  <div class="crt" id="crt" hidden role="dialog" aria-modal="true">
-    <button class="close" id="close" aria-label="Close">&times; back to the wall</button>
-    <div class="crt-screen" id="crt-content"></div>
+  <div class="project" id="project" hidden>
+    <div class="frame" id="frame" role="dialog" aria-modal="true" aria-labelledby="p-title">
+      <div class="bar">
+        <div class="info">
+          <h2 id="p-title">HELCO</h2>
+          <p>Marketing site for Hany ElAraby &amp; Co., an Egyptian audit, tax and advisory firm. Next.js, Tailwind and next-intl, in English and Arabic with full RTL.</p>
+        </div>
+        <div class="actions">
+          <a href="https://helco-co.github.io/" target="_blank" rel="noopener">Open in new tab &#8599;</a>
+          <button id="close" type="button">&times; Close</button>
+        </div>
+      </div>
+      <div class="viewport" id="viewport"></div>
+    </div>
   </div>
 
-  <template id="t-about">
-    <h1>Ahmed Khalil</h1>
-    <p class="lead">Student at the American University in Cairo, building things for the web.</p>
-    <p>Write a short paragraph about yourself here: what you study, what you enjoy building, and what you're looking for next.</p>
-  </template>
-
-  <template id="t-skills">
-    <h2>Skills</h2>
-    <ul class="tags">
-      <li>HTML &amp; CSS</li><li>JavaScript</li><li>Next.js</li><li>Tailwind</li><li>Shopify themes</li><li>Bilingual EN/AR sites</li><li>Git &amp; GitHub</li>
-    </ul>
-  </template>
-
-  <template id="t-contact">
-    <h2>Contact</h2>
-    <p>Want to work together? Reach out.</p>
-    <p><a href="mailto:ahmedm.khalil@aucegypt.edu">ahmedm.khalil@aucegypt.edu</a></p>
-    <p><a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">github.com/ahmedmohamedkhalilx-droid</a></p>
-  </template>
-
-  <template id="t-p1" data-wide>
-    <h2>HELCO</h2>
-    <p>Marketing site for Hany ElAraby &amp; Co., an Egyptian audit, tax and advisory firm. Built with Next.js, Tailwind and next-intl, in English and Arabic with full RTL.</p>
-    <ul class="tags"><li>Next.js</li><li>Tailwind</li><li>next-intl</li><li>RTL</li></ul>
-    <iframe class="site-frame" src="https://helco-co.github.io/" title="HELCO live site" loading="lazy"></iframe>
-    <p><a href="https://helco-co.github.io/" target="_blank" rel="noopener">Open in a new tab &rarr;</a></p>
-  </template>
-  <template id="t-p2">
-    <h2>Tessera</h2>
-    <p>A custom Shopify theme for the Tessera storefront: woven coverlets, tailored collections, and bespoke packaging.</p>
-    <ul class="tags"><li>Shopify</li><li>Liquid</li><li>Theme design</li></ul>
-    <p class="status">&#9679; Not published yet. The live store will appear here once it launches.</p>
-  </template>
-  <template id="t-p3">
-    <h2>Next project</h2>
-    <p>Something new is being built. Check back soon.</p>
-  </template>
+  <footer>
+    <a href="mailto:ahmedm.khalil@aucegypt.edu">ahmedm.khalil@aucegypt.edu</a> &middot;
+    <a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">GitHub</a>
+  </footer>
 
   <script src="script.js"></script>
 </body>

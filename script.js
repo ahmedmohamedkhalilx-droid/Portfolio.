@@ -1,70 +1,84 @@
-const crt = document.getElementById('crt');
-const crtScreen = document.getElementById('crt-content');
 const wall = document.getElementById('wall');
-let lastTv = null;
+const tv = document.getElementById('tv-helco');
+const screenEl = document.getElementById('tv-screen');
+const project = document.getElementById('project');
+const frame = document.getElementById('frame');
+const viewport = document.getElementById('viewport');
+const closeBtn = document.getElementById('close');
+const SITE = 'https://helco-co.github.io/';
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// build the five extra faces of each TV cabinet (the front is already in the HTML)
-document.querySelectorAll('.tv').forEach((tv) => {
-  ['back', 'left', 'right', 'top', 'bottom'].forEach((side) => {
-    const face = document.createElement('div');
-    face.className = 'face ' + side;
-    tv.append(face);
-  });
+// build the five extra faces of the cabinet (the front is already in the HTML)
+['back', 'left', 'right', 'top', 'bottom'].forEach((side) => {
+  const face = document.createElement('div');
+  face.className = 'face ' + side;
+  tv.append(face);
 });
 
-// live site thumbnails: scale the 1280px-wide iframe to fit its TV screen
+// scale the 1280px-wide live preview to fit the TV screen
 function fitLive() {
-  document.querySelectorAll('.screen.live').forEach((screen) => {
-    const s = screen.clientWidth / 1280;
-    screen.style.setProperty('--s', s);
-    screen.querySelector('iframe').style.height = screen.clientHeight / s + 'px';
-  });
+  const s = screenEl.clientWidth / 1280;
+  const iframe = screenEl.querySelector('iframe');
+  screenEl.style.setProperty('--s', s);
+  iframe.style.height = screenEl.clientHeight / s + 'px';
 }
 fitLive();
 window.addEventListener('resize', fitLive);
 
-// tilt the whole wall slightly toward the pointer
-const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// tilt the TV toward the pointer
 if (!reduceMotion) {
   window.addEventListener('pointermove', (e) => {
+    if (!project.hidden) return;
     const x = e.clientX / window.innerWidth - 0.5;
     const y = e.clientY / window.innerHeight - 0.5;
-    wall.style.setProperty('--rx', (x * 26).toFixed(2) + 'deg');
-    wall.style.setProperty('--ry', (-y * 12).toFixed(2) + 'deg');
+    wall.style.setProperty('--rx', (x * 26 - 8).toFixed(2) + 'deg');
+    wall.style.setProperty('--ry', (-y * 12 + 3).toFixed(2) + 'deg');
   });
 }
 
-function openTv(id, trigger) {
-  const tpl = document.getElementById('t-' + id);
-  if (!tpl) return;
-  crtScreen.replaceChildren(tpl.content.cloneNode(true));
-  crtScreen.classList.toggle('wide', tpl.hasAttribute('data-wide'));
-  lastTv = trigger;
-  crt.hidden = false;
-  document.getElementById('close').focus();
+function setRect(r) {
+  frame.style.left = r.left + 'px';
+  frame.style.top = r.top + 'px';
+  frame.style.width = r.width + 'px';
+  frame.style.height = r.height + 'px';
 }
+const fullRect = () => {
+  const m = Math.min(window.innerWidth, window.innerHeight) * 0.03;
+  return { left: m, top: m, width: window.innerWidth - m * 2, height: window.innerHeight - m * 2 };
+};
 
-function closeTv() {
-  crt.hidden = true;
-  crtScreen.replaceChildren(); // also stops any embedded site
-  if (lastTv) lastTv.focus();
-}
-
-document.querySelectorAll('[data-open]').forEach((tv) => {
-  tv.addEventListener('click', () => openTv(tv.dataset.open, tv));
-  tv.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTv(tv.dataset.open, tv); }
+function openProject() {
+  const r = screenEl.getBoundingClientRect();
+  project.hidden = false;
+  document.body.style.overflow = 'hidden';
+  setRect(r); // start exactly over the TV screen
+  frame.getBoundingClientRect(); // flush so the transition runs
+  requestAnimationFrame(() => {
+    project.classList.add('open');
+    setRect(fullRect());
   });
-});
-document.getElementById('close').addEventListener('click', closeTv);
-crt.addEventListener('click', (e) => { if (e.target === crt) closeTv(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !crt.hidden) closeTv(); });
+  const iframe = document.createElement('iframe');
+  iframe.src = SITE;
+  iframe.title = 'HELCO live site';
+  viewport.replaceChildren(iframe);
+  closeBtn.focus();
+}
 
-// remote: toggle the wall's background
-const root = document.documentElement;
-try { if (localStorage.getItem('theme') === 'dark') root.dataset.theme = 'dark'; } catch (e) {}
-document.getElementById('remote').addEventListener('click', () => {
-  const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
-  root.dataset.theme = next;
-  try { localStorage.setItem('theme', next); } catch (e) {}
+function closeProject() {
+  project.classList.remove('open');
+  setRect(screenEl.getBoundingClientRect());
+  setTimeout(() => {
+    project.hidden = true;
+    document.body.style.overflow = '';
+    viewport.replaceChildren(); // stops the embedded site
+    tv.focus();
+  }, reduceMotion ? 0 : 450);
+}
+
+tv.addEventListener('click', openProject);
+tv.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProject(); }
 });
+closeBtn.addEventListener('click', closeProject);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !project.hidden) closeProject(); });
+window.addEventListener('resize', () => { if (!project.hidden) setRect(fullRect()); });
