@@ -8,42 +8,58 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="wall" id="wall" aria-label="Portfolio menu: choose a TV">
-    <button class="tv tv-welcome wood" data-open="about" aria-label="Open About">
-      <span class="screen cream"><b>WELCOME</b><i>TO MY PORTFOLIO</i><u>&#9656; CLICK TO ENTER</u></span>
-      <span class="panel"><span class="knob"></span><span class="slots"></span></span>
-    </button>
+  <div class="stage">
+    <main class="wall" id="wall" aria-label="Portfolio menu: choose a TV">
+      <div class="tv tv-welcome wood" role="button" tabindex="0" data-open="about" aria-label="Open About">
+        <div class="front">
+          <span class="screen cream"><b>WELCOME</b><i>TO MY PORTFOLIO</i><u>&#9656; CLICK TO ENTER</u></span>
+          <span class="panel"><span class="knob"></span><span class="slots"></span></span>
+        </div>
+      </div>
 
-    <button class="tv tv-skills red" data-open="skills" aria-label="Open Skills">
-      <span class="screen noise"><em>SKILLS</em></span>
-      <span class="panel"><span class="slots"></span></span>
-    </button>
+      <div class="tv tv-skills red" role="button" tabindex="0" data-open="skills" aria-label="Open Skills">
+        <div class="front">
+          <span class="screen noise"><em>SKILLS</em></span>
+          <span class="panel"><span class="slots"></span></span>
+        </div>
+      </div>
 
-    <button class="tv tv-contact red" data-open="contact" aria-label="Open Contact">
-      <span class="screen bars"><em>CONTACT</em></span>
-      <span class="panel"><span class="slots"></span></span>
-    </button>
+      <div class="tv tv-contact red" role="button" tabindex="0" data-open="contact" aria-label="Open Contact">
+        <div class="front">
+          <span class="screen bars"><em>CONTACT</em></span>
+          <span class="panel"><span class="slots"></span></span>
+        </div>
+      </div>
 
-    <button class="tv tv-p1 grey" data-open="p1" aria-label="Open Project One">
-      <span class="screen blue"><em>PROJECT 01</em></span>
-      <span class="panel"><span class="knob"></span><span class="knob"></span></span>
-    </button>
-    <button class="tv tv-p2 dark" data-open="p2" aria-label="Open Project Two">
-      <span class="screen fuzz"><em>PROJECT 02</em></span>
-      <span class="panel"><span class="knob"></span><span class="knob"></span></span>
-    </button>
-    <button class="tv tv-p3 silver" data-open="p3" aria-label="Open Project Three">
-      <span class="screen blue"><em>PROJECT 03</em></span>
-      <span class="panel"><span class="knob"></span><span class="knob"></span></span>
-    </button>
+      <div class="tv tv-p1 grey" role="button" tabindex="0" data-open="p1" aria-label="Open HELCO">
+        <div class="front">
+          <span class="screen live"><iframe src="https://helco-co.github.io/" title="HELCO live preview" loading="lazy" tabindex="-1" aria-hidden="true"></iframe><em>HELCO</em></span>
+          <span class="panel"><span class="knob"></span><span class="knob"></span></span>
+        </div>
+      </div>
+      <div class="tv tv-p2 dark" role="button" tabindex="0" data-open="p2" aria-label="Open Tessera">
+        <div class="front">
+          <span class="screen tessera"><em>TESSERA</em></span>
+          <span class="panel"><span class="knob"></span><span class="knob"></span></span>
+        </div>
+      </div>
+      <div class="tv tv-p3 silver" role="button" tabindex="0" data-open="p3" aria-label="Open Project Three">
+        <div class="front">
+          <span class="screen blue"><em>COMING SOON</em></span>
+          <span class="panel"><span class="knob"></span><span class="knob"></span></span>
+        </div>
+      </div>
 
-    <button class="tv tv-mini silver" data-open="contact" aria-label="Open Contact">
-      <span class="screen orange"><em>HIRE ME</em></span>
-    </button>
+      <div class="tv tv-mini silver" role="button" tabindex="0" data-open="contact" aria-label="Open Contact">
+        <div class="front">
+          <span class="screen orange"><em>HIRE ME</em></span>
+        </div>
+      </div>
 
-    <a class="phone" href="mailto:ahmedm.khalil@aucegypt.edu" aria-label="Email me"><span>&#9656; pick up!</span></a>
-    <button class="remote" id="remote" aria-label="Toggle dark mode"><i></i><i></i><i></i></button>
-  </main>
+      <a class="phone" href="mailto:ahmedm.khalil@aucegypt.edu" aria-label="Email me"><span>&#9656; pick up!</span></a>
+      <button class="remote" id="remote" aria-label="Toggle dark mode"><i></i><i></i><i></i></button>
+    </main>
+  </div>
 
   <div class="crt" id="crt" hidden role="dialog" aria-modal="true">
     <button class="close" id="close" aria-label="Close">&times; back to the wall</button>
@@ -59,7 +75,7 @@
   <template id="t-skills">
     <h2>Skills</h2>
     <ul class="tags">
-      <li>HTML &amp; CSS</li><li>JavaScript</li><li>Python</li><li>Git &amp; GitHub</li><li>Problem solving</li><li>Teamwork</li>
+      <li>HTML &amp; CSS</li><li>JavaScript</li><li>Next.js</li><li>Tailwind</li><li>Shopify themes</li><li>Bilingual EN/AR sites</li><li>Git &amp; GitHub</li>
     </ul>
   </template>
 
@@ -70,23 +86,22 @@
     <p><a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">github.com/ahmedmohamedkhalilx-droid</a></p>
   </template>
 
-  <template id="t-p1">
-    <h2>Project One</h2>
-    <p>One or two sentences on what it does and the problem it solves.</p>
-    <ul class="tags"><li>HTML</li><li>CSS</li><li>JavaScript</li></ul>
-    <p><a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">View on GitHub &rarr;</a></p>
+  <template id="t-p1" data-wide>
+    <h2>HELCO</h2>
+    <p>Marketing site for Hany ElAraby &amp; Co., an Egyptian audit, tax and advisory firm. Built with Next.js, Tailwind and next-intl, in English and Arabic with full RTL.</p>
+    <ul class="tags"><li>Next.js</li><li>Tailwind</li><li>next-intl</li><li>RTL</li></ul>
+    <iframe class="site-frame" src="https://helco-co.github.io/" title="HELCO live site" loading="lazy"></iframe>
+    <p><a href="https://helco-co.github.io/" target="_blank" rel="noopener">Open in a new tab &rarr;</a></p>
   </template>
   <template id="t-p2">
-    <h2>Project Two</h2>
-    <p>One or two sentences on what it does and the problem it solves.</p>
-    <ul class="tags"><li>Python</li><li>API</li></ul>
-    <p><a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">View on GitHub &rarr;</a></p>
+    <h2>Tessera</h2>
+    <p>A custom Shopify theme for the Tessera storefront: woven coverlets, tailored collections, and bespoke packaging.</p>
+    <ul class="tags"><li>Shopify</li><li>Liquid</li><li>Theme design</li></ul>
+    <p class="status">&#9679; Not published yet. The live store will appear here once it launches.</p>
   </template>
   <template id="t-p3">
-    <h2>Project Three</h2>
-    <p>One or two sentences on what it does and the problem it solves.</p>
-    <ul class="tags"><li>React</li><li>Node</li></ul>
-    <p><a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">View on GitHub &rarr;</a></p>
+    <h2>Next project</h2>
+    <p>Something new is being built. Check back soon.</p>
   </template>
 
   <script src="script.js"></script>
