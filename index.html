@@ -8,73 +8,87 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="nav">
-    <a class="logo" href="#home">Ahmed Khalil</a>
-    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">◐</button>
-    <nav>
-      <a href="#about">About</a>
-      <a href="#projects">Projects</a>
-      <a href="#skills">Skills</a>
-      <a href="#contact">Contact</a>
-    </nav>
-  </header>
+  <main class="wall" id="wall" aria-label="Portfolio menu: choose a TV">
+    <button class="tv tv-welcome wood" data-open="about" aria-label="Open About">
+      <span class="screen cream"><b>WELCOME</b><i>TO MY PORTFOLIO</i><u>&#9656; CLICK TO ENTER</u></span>
+      <span class="panel"><span class="knob"></span><span class="slots"></span></span>
+    </button>
 
-  <main>
-    <section id="home" class="hero">
-      <p class="eyebrow">Hi, I'm</p>
-      <h1>Ahmed Khalil</h1>
-      <p class="lead">Student at the American University in Cairo, building things for the web.</p>
-      <div class="actions">
-        <a class="btn" href="#projects">View my work</a>
-        <a class="btn ghost" href="#contact">Get in touch</a>
-      </div>
-    </section>
+    <button class="tv tv-skills red" data-open="skills" aria-label="Open Skills">
+      <span class="screen noise"><em>SKILLS</em></span>
+      <span class="panel"><span class="slots"></span></span>
+    </button>
 
-    <section id="about">
-      <h2>About</h2>
-      <p>Write a short paragraph about yourself here: what you study, what you enjoy building, and what you're looking for next.</p>
-    </section>
+    <button class="tv tv-contact red" data-open="contact" aria-label="Open Contact">
+      <span class="screen bars"><em>CONTACT</em></span>
+      <span class="panel"><span class="slots"></span></span>
+    </button>
 
-    <section id="projects">
-      <h2>Projects</h2>
-      <div class="grid">
-        <article class="card">
-          <h3>Project One</h3>
-          <p>One or two sentences on what it does and the problem it solves.</p>
-          <ul class="tags"><li>HTML</li><li>CSS</li><li>JavaScript</li></ul>
-          <a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">View on GitHub →</a>
-        </article>
-        <article class="card">
-          <h3>Project Two</h3>
-          <p>One or two sentences on what it does and the problem it solves.</p>
-          <ul class="tags"><li>Python</li><li>API</li></ul>
-          <a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">View on GitHub →</a>
-        </article>
-        <article class="card">
-          <h3>Project Three</h3>
-          <p>One or two sentences on what it does and the problem it solves.</p>
-          <ul class="tags"><li>React</li><li>Node</li></ul>
-          <a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">View on GitHub →</a>
-        </article>
-      </div>
-    </section>
+    <button class="tv tv-p1 grey" data-open="p1" aria-label="Open Project One">
+      <span class="screen blue"><em>PROJECT 01</em></span>
+      <span class="panel"><span class="knob"></span><span class="knob"></span></span>
+    </button>
+    <button class="tv tv-p2 dark" data-open="p2" aria-label="Open Project Two">
+      <span class="screen fuzz"><em>PROJECT 02</em></span>
+      <span class="panel"><span class="knob"></span><span class="knob"></span></span>
+    </button>
+    <button class="tv tv-p3 silver" data-open="p3" aria-label="Open Project Three">
+      <span class="screen blue"><em>PROJECT 03</em></span>
+      <span class="panel"><span class="knob"></span><span class="knob"></span></span>
+    </button>
 
-    <section id="skills">
-      <h2>Skills</h2>
-      <ul class="tags big">
-        <li>HTML &amp; CSS</li><li>JavaScript</li><li>Python</li><li>Git &amp; GitHub</li><li>Problem solving</li><li>Teamwork</li>
-      </ul>
-    </section>
+    <button class="tv tv-mini silver" data-open="contact" aria-label="Open Contact">
+      <span class="screen orange"><em>HIRE ME</em></span>
+    </button>
 
-    <section id="contact">
-      <h2>Contact</h2>
-      <p>Want to work together? Reach out.</p>
-      <p><a href="mailto:ahmedm.khalil@aucegypt.edu">ahmedm.khalil@aucegypt.edu</a></p>
-      <p><a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">github.com/ahmedmohamedkhalilx-droid</a></p>
-    </section>
+    <a class="phone" href="mailto:ahmedm.khalil@aucegypt.edu" aria-label="Email me"><span>&#9656; pick up!</span></a>
+    <button class="remote" id="remote" aria-label="Toggle dark mode"><i></i><i></i><i></i></button>
   </main>
 
-  <footer>© <span id="year"></span> Ahmed Khalil</footer>
+  <div class="crt" id="crt" hidden role="dialog" aria-modal="true">
+    <button class="close" id="close" aria-label="Close">&times; back to the wall</button>
+    <div class="crt-screen" id="crt-content"></div>
+  </div>
+
+  <template id="t-about">
+    <h1>Ahmed Khalil</h1>
+    <p class="lead">Student at the American University in Cairo, building things for the web.</p>
+    <p>Write a short paragraph about yourself here: what you study, what you enjoy building, and what you're looking for next.</p>
+  </template>
+
+  <template id="t-skills">
+    <h2>Skills</h2>
+    <ul class="tags">
+      <li>HTML &amp; CSS</li><li>JavaScript</li><li>Python</li><li>Git &amp; GitHub</li><li>Problem solving</li><li>Teamwork</li>
+    </ul>
+  </template>
+
+  <template id="t-contact">
+    <h2>Contact</h2>
+    <p>Want to work together? Reach out.</p>
+    <p><a href="mailto:ahmedm.khalil@aucegypt.edu">ahmedm.khalil@aucegypt.edu</a></p>
+    <p><a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">github.com/ahmedmohamedkhalilx-droid</a></p>
+  </template>
+
+  <template id="t-p1">
+    <h2>Project One</h2>
+    <p>One or two sentences on what it does and the problem it solves.</p>
+    <ul class="tags"><li>HTML</li><li>CSS</li><li>JavaScript</li></ul>
+    <p><a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">View on GitHub &rarr;</a></p>
+  </template>
+  <template id="t-p2">
+    <h2>Project Two</h2>
+    <p>One or two sentences on what it does and the problem it solves.</p>
+    <ul class="tags"><li>Python</li><li>API</li></ul>
+    <p><a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">View on GitHub &rarr;</a></p>
+  </template>
+  <template id="t-p3">
+    <h2>Project Three</h2>
+    <p>One or two sentences on what it does and the problem it solves.</p>
+    <ul class="tags"><li>React</li><li>Node</li></ul>
+    <p><a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">View on GitHub &rarr;</a></p>
+  </template>
+
   <script src="script.js"></script>
 </body>
 </html>
