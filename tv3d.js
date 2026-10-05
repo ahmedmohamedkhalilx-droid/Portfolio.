@@ -136,17 +136,43 @@ export function createTvs(container, tvConfigs, { onPress }) {
 
     // control panel: knobs, speaker slots, tan strip
     const panelX = 3.0;
-    [1.25, 0.2].forEach((y, i) => {
-      const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.46, 0.3, 40), chrome);
-      knob.rotation.x = Math.PI / 2;
-      knob.position.set(panelX, y + 0.55, frontZ + 0.15);
-      knob.rotation.z = i ? 0.9 : -0.5;
-      knob.castShadow = true;
-      g.add(knob);
-      const mark = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.3, 0.04), tan);
-      mark.position.set(panelX, y + 0.55, frontZ + 0.32);
-      mark.rotation.z = knob.rotation.z;
-      g.add(mark);
+    // two real dials: a recessed collar, a ridged metal knob, a tan cap and a dark pointer.
+    // The knob is turned by rotating the group about the z axis (the axis it faces along).
+    const dials = [];
+    [[1.8, -0.5], [0.75, 0.9]].forEach(([y, start]) => {
+      const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.62, 0.1, 40), black);
+      collar.rotation.x = Math.PI / 2;
+      collar.position.set(panelX, y, frontZ + 0.05);
+      g.add(collar);
+
+      const dial = new THREE.Group();
+      dial.position.set(panelX, y, frontZ + 0.1);
+      dial.userData.dial = { angle: start, target: start };
+      dial.rotation.z = start;
+
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.46, 0.34, 40), chrome);
+      body.rotation.x = Math.PI / 2;           // cylinder axis now points out of the TV (+z)
+      body.position.z = 0.17;
+      body.castShadow = true;
+      dial.add(body);
+      for (let k = 0; k < 20; k++) {           // grip ridges around the rim
+        const ang = (k / 20) * Math.PI * 2;
+        const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.07, 0.3), chrome);
+        ridge.position.set(Math.cos(ang) * 0.45, Math.sin(ang) * 0.45, 0.17);
+        ridge.rotation.z = ang;
+        dial.add(ridge);
+      }
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.06, 32), tan);
+      cap.rotation.x = Math.PI / 2;
+      cap.position.z = 0.36;
+      dial.add(cap);
+      const pointer = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.3, 0.05), black);
+      pointer.position.set(0, 0.17, 0.41);
+      dial.add(pointer);
+
+      dial.traverse((o) => { o.userData.dialOwner = dial; });
+      g.add(dial);
+      dials.push(dial);
     });
     for (let i = 0; i < 9; i++) {
       const slot = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.5, 0.05), black);
@@ -200,7 +226,7 @@ export function createTvs(container, tvConfigs, { onPress }) {
       g.add(site);
     }
 
-    return { id: cfg.id, group: g, screen, scale: 1, target: 1 };
+    return { id: cfg.id, group: g, screen, dials, scale: 1, target: 1 };
   }
   const row = new THREE.Group(); // both TVs live in one row so they turn together and stay touching
   scene.add(row);
@@ -261,6 +287,16 @@ export function createTvs(container, tvConfigs, { onPress }) {
         dirty = true;
       }
     }
+    for (const t of tvs) {
+      for (const d of t.dials) {
+        const st = d.userData.dial;
+        if (Math.abs(st.angle - st.target) > 0.002) {
+          st.angle = reduceMotion ? st.target : st.angle + (st.target - st.angle) * 0.2;
+          d.rotation.z = st.angle;
+          dirty = true;
+        }
+      }
+    }
     if (!dirty) return;
     dirty = false;
     gl.render(scene, camera);
@@ -271,20 +307,21 @@ export function createTvs(container, tvConfigs, { onPress }) {
   // ----- hover + press
   const ray = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
-  function tvAt(e) {
+  function pick(e) {
     const r = gl.domElement.getBoundingClientRect();
     mouse.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(mouse, camera);
-    for (const hit of ray.intersectObjects(tvs.map((t) => t.group), true)) {
-      let o = hit.object;
-      while (o) {
-        const t = tvs.find((x) => x.group === o);
-        if (t) return t;
-        o = o.parent;
-      }
+    const hit = ray.intersectObjects(tvs.map((t) => t.group), true)[0];
+    if (!hit) return null;
+    let o = hit.object;
+    while (o) {
+      const t = tvs.find((x) => x.group === o);
+      if (t) return { tv: t, dial: hit.object.userData.dialOwner || null };
+      o = o.parent;
     }
     return null;
   }
+  const tvAt = (e) => pick(e)?.tv ?? null;
   function setHover(t) {
     for (const x of tvs) x.target = x === t ? HOVER_SCALE : 1;
     gl.domElement.style.cursor = t ? 'pointer' : 'default';
@@ -292,8 +329,10 @@ export function createTvs(container, tvConfigs, { onPress }) {
   gl.domElement.addEventListener('pointermove', (e) => setHover(tvAt(e)));
   gl.domElement.addEventListener('pointerleave', () => setHover(null));
   gl.domElement.addEventListener('click', (e) => {
-    const t = tvAt(e);
-    if (t) onPress(t.id);
+    const hit = pick(e);
+    if (!hit) return;
+    if (hit.dial) { hit.dial.userData.dial.target -= Math.PI / 3; dirty = true; return; } // a knob click turns the dial; it does not open the project
+    onPress(hit.tv.id);
   });
 
   const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) =>
