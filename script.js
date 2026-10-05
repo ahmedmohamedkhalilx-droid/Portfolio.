@@ -30,8 +30,19 @@ try {
   tvs = createTvs(
     wall,
     [
-      { id: 'helco', title: 'HELCO', siteUrl: PROJECTS.helco.url },
-      { id: 'tessera', title: 'Tessera', label: 'TESSERA', sub: 'COMING SOON', color: 0x362f27 },
+      {
+        id: 'helco', title: 'HELCO', siteUrl: PROJECTS.helco.url,
+        // from helco-co.github.io: ground #0f1419, panels #1b2025, gold #a88c68
+        palette: { body: 0x1b2025, back: 0x12181e, bezel: 0x0f1419, accent: 0xa88c68, knob: 0xe1c19a, slot: 0x090e14 },
+      },
+      {
+        id: 'tessera', title: 'Tessera', label: 'TESSERA', sub: 'COMING SOON',
+        // Tessera brand palette: stone #C9C0B0, forest #363C31, burgundy #33161A, plum-black #211415
+        palette: {
+          body: 0x33161a, back: 0x211415, bezel: 0x211415, accent: 0xc9c0b0, knob: 0xc9c0b0, slot: 0x150b0c,
+          screenLight: '#4a5244', screenDark: '#363c31', screenText: '#c9c0b0',
+        },
+      },
     ],
     { onPress: (id) => openProject(id) }
   );

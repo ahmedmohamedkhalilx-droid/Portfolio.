@@ -41,24 +41,25 @@ function glossTexture() {
 }
 
 // the screen shown by a TV that has no live site yet
-function labelTexture(label, sub) {
+function labelTexture(label, sub, pal) {
   const c = document.createElement('canvas');
   c.width = 1024;
   c.height = 768;
   const g = c.getContext('2d');
   const bg = g.createRadialGradient(440, 330, 60, 512, 384, 620);
-  bg.addColorStop(0, '#eadfca');
-  bg.addColorStop(1, '#a98f68');
+  bg.addColorStop(0, pal.screenLight);
+  bg.addColorStop(1, pal.screenDark);
   g.fillStyle = bg;
   g.fillRect(0, 0, 1024, 768);
-  g.fillStyle = 'rgba(60,42,20,0.9)';
+  g.fillStyle = pal.screenText;
   g.textAlign = 'center';
   g.font = '600 150px Georgia, "Times New Roman", serif';
   g.fillText(label, 512, 390);
   g.font = '34px ui-monospace, Consolas, monospace';
-  g.fillStyle = 'rgba(60,42,20,0.75)';
+  g.globalAlpha = 0.8;
   g.fillText(sub, 512, 470);
-  g.fillStyle = 'rgba(0,0,0,0.12)'; // scanlines
+  g.globalAlpha = 1;
+  g.fillStyle = 'rgba(0,0,0,0.14)'; // scanlines
   for (let y = 0; y < 768; y += 4) g.fillRect(0, y, 1024, 1);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
@@ -81,17 +82,18 @@ export function createTvs(container, tvConfigs, { onPress }) {
   container.append(css.domElement, gl.domElement);
 
   // ----- shared materials
-  const backMat = new THREE.MeshStandardMaterial({ color: 0x1b2420, roughness: 0.7, metalness: 0.1 });
-  const bezelMat = new THREE.MeshStandardMaterial({ color: 0x0f1512, roughness: 0.4, metalness: 0.2 });
-  const chrome = new THREE.MeshStandardMaterial({ color: 0xd8ddd9, roughness: 0.25, metalness: 0.9 });
-  const tan = new THREE.MeshStandardMaterial({ color: 0xb9a672, roughness: 0.4, metalness: 0.7 });
-  const black = new THREE.MeshStandardMaterial({ color: 0x070a08, roughness: 0.8 });
   const hole = new THREE.MeshBasicMaterial({ color: 0x000000, opacity: 0, blending: THREE.NoBlending, side: THREE.DoubleSide });
   const gloss = glossTexture();
 
   function buildTv(cfg) {
     const g = new THREE.Group();
-    const bodyMat = new THREE.MeshStandardMaterial({ color: cfg.color ?? 0x26322c, roughness: 0.55, metalness: 0.15 });
+    const pal = cfg.palette; // each TV wears its website's colours
+    const bodyMat = new THREE.MeshStandardMaterial({ color: pal.body, roughness: 0.55, metalness: 0.15 });
+    const backMat = new THREE.MeshStandardMaterial({ color: pal.back, roughness: 0.7, metalness: 0.1 });
+    const bezelMat = new THREE.MeshStandardMaterial({ color: pal.bezel, roughness: 0.4, metalness: 0.2 });
+    const chrome = new THREE.MeshStandardMaterial({ color: pal.knob, roughness: 0.3, metalness: 0.85 });
+    const tan = new THREE.MeshStandardMaterial({ color: pal.accent, roughness: 0.4, metalness: 0.7 });
+    const black = new THREE.MeshStandardMaterial({ color: pal.slot, roughness: 0.8 });
 
     const body = new THREE.Mesh(new RoundedBoxGeometry(BODY.w, BODY.h, BODY.d, 5, 0.28), bodyMat);
     body.castShadow = true;
@@ -116,7 +118,7 @@ export function createTvs(container, tvConfigs, { onPress }) {
     const screenZ = frontZ + 0.03;
     const screenMat = cfg.siteUrl
       ? hole
-      : new THREE.MeshBasicMaterial({ map: labelTexture(cfg.label, cfg.sub), side: THREE.DoubleSide });
+      : new THREE.MeshBasicMaterial({ map: labelTexture(cfg.label, cfg.sub, pal), side: THREE.DoubleSide });
     const screen = new THREE.Mesh(new THREE.ShapeGeometry(rrect(SCREEN.w, SCREEN.h, SCREEN.r), 24), screenMat);
     screen.position.set(SCREEN.x, SCREEN.y, screenZ);
     if (!cfg.siteUrl) { // ShapeGeometry UVs are in shape units; remap to 0..1 for the texture
@@ -214,19 +216,18 @@ export function createTvs(container, tvConfigs, { onPress }) {
   rim.position.set(8, 3, -7);
   scene.add(rim);
 
-  // ----- layout: side by side when the canvas is wide, stacked when it is tall (phones)
+  // ----- layout: side by side at every screen size
   const YAW = 0.28;
   function layout(aspect) {
-    const stacked = aspect < 1.2;
     const n = tvs.length;
-    const gap = stacked ? 10.4 : 11.4;
+    const gap = 11.4;
     tvs.forEach((t, i) => {
       const o = (i - (n - 1) / 2) * gap;
-      t.group.position.set(stacked ? 0 : o, stacked ? -o : 0, 0);
-      t.group.rotation.y = stacked ? -0.22 : (i - (n - 1) / 2) * -YAW * 1.2 - 0.05;
+      t.group.position.set(o, 0, 0);
+      t.group.rotation.y = (i - (n - 1) / 2) * -YAW * 1.2 - 0.05;
     });
-    const spanW = stacked ? 11 : (n - 1) * gap + 11;
-    const spanH = stacked ? (n - 1) * gap + 11.5 : 11.5;
+    const spanW = (n - 1) * gap + 12;
+    const spanH = 11.5;
     const t15 = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     const dist = Math.max(spanW / (2 * t15 * aspect), spanH / (2 * t15)) * 1.04;
     camera.position.set(0, 0.9 + dist * 0.1, dist);

@@ -66,7 +66,6 @@ footer { text-align: center; padding: 1.5rem 1rem 2rem; color: var(--muted); bor
 .viewport iframe { width: 100%; height: 100%; border: 0; display: block; }
 
 @media (max-width: 700px) {
-  .wall { aspect-ratio: .55; width: min(420px, 96vw); }
   .frame { border-width: 8px; border-radius: 18px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
