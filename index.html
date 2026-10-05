@@ -14,20 +14,23 @@
   </header>
 
   <main class="stage">
-    <div class="wall" id="wall" aria-label="3D TV showing the HELCO project. Drag to rotate, press to open."></div>
+    <div class="wall" id="wall" aria-label="Two 3D TVs: HELCO and Tessera. Hover to enlarge, press to open."></div>
   </main>
-  <p class="hint">Drag to spin the TV. Press it to open the project. More TVs coming soon.</p>
-  <p class="open-row"><button id="open-project" type="button">&#9656; Open HELCO project</button></p>
+  <p class="hint">Hover a TV to enlarge it, press it to open the project.</p>
+  <p class="open-row">
+    <button data-open="helco" type="button">&#9656; HELCO</button>
+    <button data-open="tessera" type="button">&#9656; Tessera</button>
+  </p>
 
   <div class="project" id="project" hidden>
     <div class="frame" id="frame" role="dialog" aria-modal="true" aria-labelledby="p-title">
       <div class="bar">
         <div class="info">
-          <h2 id="p-title">HELCO</h2>
-          <p>Marketing site for Hany ElAraby &amp; Co., an Egyptian audit, tax and advisory firm. Next.js, Tailwind and next-intl, in English and Arabic with full RTL.</p>
+          <h2 id="p-title"></h2>
+          <p id="p-desc"></p>
         </div>
         <div class="actions">
-          <a href="https://helco-co.github.io/" target="_blank" rel="noopener">Open in new tab &#8599;</a>
+          <a id="p-link" href="#" target="_blank" rel="noopener">Open in new tab &#8599;</a>
           <button id="close" type="button">&times; Close</button>
         </div>
       </div>
