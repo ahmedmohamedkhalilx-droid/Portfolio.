@@ -31,7 +31,7 @@ a { color: var(--tan); }
 
 /* ---------- the 3D TV (three.js canvas) ---------- */
 .stage { flex: 1; display: grid; place-items: center; padding: 1.5rem 1rem 0; }
-.wall { position: relative; width: min(1100px, 96vw); aspect-ratio: 1.9; }
+.wall { position: relative; width: min(1000px, 96vw); aspect-ratio: 1.6; }
 .wall canvas { display: block; }
 .wall.no-3d { display: grid; place-items: center; color: var(--muted); aspect-ratio: auto; padding: 3rem 1rem; }
 

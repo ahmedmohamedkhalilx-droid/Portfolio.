@@ -200,10 +200,12 @@ export function createTvs(container, tvConfigs, { onPress }) {
       g.add(site);
     }
 
-    scene.add(g);
     return { id: cfg.id, group: g, screen, scale: 1, target: 1 };
   }
+  const row = new THREE.Group(); // both TVs live in one row so they turn together and stay touching
+  scene.add(row);
   const tvs = tvConfigs.map(buildTv);
+  tvs.forEach((t) => row.add(t.group));
 
   scene.add(new THREE.HemisphereLight(0xcfe3d8, 0x0a0e0c, 1.1));
   const key = new THREE.DirectionalLight(0xffffff, 2.4);
@@ -217,17 +219,13 @@ export function createTvs(container, tvConfigs, { onPress }) {
   scene.add(rim);
 
   // ----- layout: side by side at every screen size
-  const YAW = 0.28;
   function layout(aspect) {
     const n = tvs.length;
-    const gap = 11.4;
-    tvs.forEach((t, i) => {
-      const o = (i - (n - 1) / 2) * gap;
-      t.group.position.set(o, 0, 0);
-      t.group.rotation.y = (i - (n - 1) / 2) * -YAW * 1.2 - 0.05;
-    });
-    const spanW = (n - 1) * gap + 12;
-    const spanH = 11.5;
+    const gap = BODY.w + 0.04; // cabinets touch (a hair of air avoids z-fighting)
+    tvs.forEach((t, i) => t.group.position.set((i - (n - 1) / 2) * gap, 0, 0));
+    row.rotation.y = -0.2; // the row turns as one piece, so the TVs stay edge to edge
+    const spanW = (n - 1) * gap + BODY.w + 2.2;
+    const spanH = 13;
     const t15 = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     const dist = Math.max(spanW / (2 * t15 * aspect), spanH / (2 * t15)) * 1.04;
     camera.position.set(0, 0.9 + dist * 0.1, dist);
@@ -259,6 +257,7 @@ export function createTvs(container, tvConfigs, { onPress }) {
       if (Math.abs(t.scale - t.target) > 0.001) {
         t.scale = reduceMotion ? t.target : t.scale + (t.target - t.scale) * 0.16;
         t.group.scale.setScalar(t.scale);
+        t.group.position.z = (t.scale - 1) * 7;
         dirty = true;
       }
     }
@@ -304,7 +303,7 @@ export function createTvs(container, tvConfigs, { onPress }) {
     // a TV's screen as a bounding box in viewport pixels: the start of the zoom animation
     screenRect(id) {
       const t = tvs.find((x) => x.id === id);
-      t.group.updateMatrixWorld(true);
+      row.updateMatrixWorld(true);
       const box = container.getBoundingClientRect();
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
       for (const c of corners) {
