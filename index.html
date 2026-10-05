@@ -13,20 +13,11 @@
     <p>Student at the American University in Cairo, building websites.</p>
   </header>
 
-  <div class="stage">
-    <main class="wall" id="wall">
-      <div class="tv wood" id="tv-helco" role="button" tabindex="0" aria-label="Open the HELCO project">
-        <div class="front">
-          <span class="screen live" id="tv-screen">
-            <iframe src="https://helco-co.github.io/" title="HELCO live preview" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
-            <em>HELCO &middot; press to open</em>
-          </span>
-          <span class="panel"><span class="knob"></span><span class="knob"></span><span class="slots"></span></span>
-        </div>
-      </div>
-    </main>
-  </div>
-  <p class="hint">More TVs coming soon. Press the TV to open the project.</p>
+  <main class="stage">
+    <div class="wall" id="wall" aria-label="3D TV showing the HELCO project. Drag to rotate, press to open."></div>
+  </main>
+  <p class="hint">Drag to spin the TV. Press it to open the project. More TVs coming soon.</p>
+  <p class="open-row"><button id="open-project" type="button">&#9656; Open HELCO project</button></p>
 
   <div class="project" id="project" hidden>
     <div class="frame" id="frame" role="dialog" aria-modal="true" aria-labelledby="p-title">
@@ -49,6 +40,14 @@
     <a href="https://github.com/ahmedmohamedkhalilx-droid" target="_blank" rel="noopener">GitHub</a>
   </footer>
 
-  <script src="script.js"></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
