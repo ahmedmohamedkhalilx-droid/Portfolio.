@@ -206,10 +206,12 @@ export function createTvs(container, tvConfigs, { onPress }) {
       g.add(foot);
     });
 
-    // antennas
+    // antennas (grouped so they can be hidden when another TV is stacked on top)
+    const antennas = new THREE.Group();
+    g.add(antennas);
     const base = new THREE.Mesh(new THREE.SphereGeometry(0.55, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), backMat);
     base.position.set(-0.3, BODY.h / 2 - 0.02, -0.4);
-    g.add(base);
+    antennas.add(base);
     [-0.6, 0.55].forEach((tilt) => {
       const pivot = new THREE.Group();
       pivot.position.copy(base.position);
@@ -219,7 +221,7 @@ export function createTvs(container, tvConfigs, { onPress }) {
       const tip = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 8), tan);
       tip.position.y = 3.4;
       pivot.add(rod, tip);
-      g.add(pivot);
+      antennas.add(pivot);
     });
 
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), new THREE.ShadowMaterial({ opacity: 0.4 }));
@@ -242,7 +244,7 @@ export function createTvs(container, tvConfigs, { onPress }) {
       g.add(site);
     }
 
-    return { id: cfg.id, group: g, screen, dials, scale: 1, target: 1 };
+    return { id: cfg.id, group: g, screen, dials, antennas, floor, scale: 1, target: 1 };
   }
   const row = new THREE.Group(); // both TVs live in one row so they turn together and stay touching
   scene.add(row);
@@ -263,15 +265,24 @@ export function createTvs(container, tvConfigs, { onPress }) {
   // ----- layout: side by side at every screen size
   function layout(aspect) {
     const n = tvs.length;
-    const gap = BODY.w + 0.04; // cabinets touch (a hair of air avoids z-fighting)
-    tvs.forEach((t, i) => t.group.position.set((i - (n - 1) / 2) * gap, 0, 0));
-    row.rotation.y = -0.2; // the row turns as one piece, so the TVs stay edge to edge
-    const spanW = (n - 1) * gap + BODY.w + 2.2;
-    const spanH = 13;
+    const stacked = aspect < 1.1; // a tall canvas (phones): the TVs sit on top of each other
+    const FEET = 0.47;            // feet height, so the upper TV stands on the one below
+    const stepX = BODY.w + 0.04;  // blocks touching, a hair of air avoids z-fighting
+    const stepY = BODY.h + FEET;
+    tvs.forEach((t, i) => {
+      if (stacked) t.group.position.set(0, ((n - 1) / 2 - i) * stepY, 0); // first TV on top
+      else t.group.position.set((i - (n - 1) / 2) * stepX, 0, 0);
+      t.antennas.visible = !stacked || i === 0; // only the top TV keeps its antennas
+      t.floor.visible = !stacked || i === n - 1; // one ground shadow, under the bottom TV
+    });
+    row.rotation.y = 0; // straight-on front view
+    const spanW = stacked ? BODY.w + 2.2 : (n - 1) * stepX + BODY.w + 2.2;
+    const spanH = stacked ? (n - 1) * stepY + BODY.h + 4.6 : 13;
     const t15 = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     const dist = Math.max(spanW / (2 * t15 * aspect), spanH / (2 * t15)) * 1.04;
-    camera.position.set(0, 0.9 + dist * 0.1, dist);
-    camera.lookAt(0, 0.5, 0);
+    const lookY = stacked ? 1.7 : 1.2;
+    camera.position.set(0, lookY, dist); // camera level with the middle of the blocks: a true front view
+    camera.lookAt(0, lookY, 0);
     camera.updateMatrixWorld(true);
   }
 
