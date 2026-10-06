@@ -120,6 +120,7 @@ export function createTvs(container, tvConfigs, { onPress }) {
     const frameTextures = cfg.frames ? cfg.frames.map((url) => {
       const tex = new THREE.TextureLoader().load(url, () => { dirty = true; });
       tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = gl.capabilities.getMaxAnisotropy(); // keeps the picture sharp when the TV is seen at an angle
       return tex;
     }) : null;
     const screenMat = cfg.siteUrl

@@ -149,8 +149,8 @@ function createScrubber({ dir, count, maxScroll }, title) {
   const stage = document.createElement('div');
   stage.className = 'scrub-stage';
   const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 768;
+  canvas.width = 1280;   // the frames are captured at 1280x960; keep them at native size so text stays sharp
+  canvas.height = 960;
   const hint = document.createElement('span');
   hint.className = 'scrub-hint';
   hint.textContent = 'Scroll ↓';
@@ -158,14 +158,22 @@ function createScrubber({ dir, count, maxScroll }, title) {
   el.append(track, stage);
 
   const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
   const imgs = Array.from({ length: count }, (_, i) => {
     const img = new Image();
     img.decoding = 'async';
     img.onload = () => { if (i === shown || shown < 0) paint(shown < 0 ? 0 : shown); };
-    img.src = `${dir}s${String(i).padStart(3, '0')}.webp`;
     return img;
   });
   let shown = -1;
+  // download coarse to fine (every 16th frame, then 8th, 4th, 2nd, the rest) so scrolling works
+  // straight away on sparse frames and sharpens as the in-between frames arrive
+  const order = [];
+  const queued = new Set();
+  for (const stride of [16, 8, 4, 2, 1]) {
+    for (let i = 0; i < count; i += stride) if (!queued.has(i)) { queued.add(i); order.push(i); }
+  }
+  order.forEach((i) => { imgs[i].src = `${dir}s${String(i).padStart(3, '0')}.webp`; });
   function paint(i) { // draw the wanted frame, or the nearest one that has loaded
     for (let d = 0; d < count; d++) {
       for (const k of [i - d, i + d]) {
