@@ -10,6 +10,7 @@ const PROJECTS = {
     title: 'Tessera',
     desc: 'Online store for an Egyptian luxury bed and bath linen house: a custom Shopify theme with about thirty bespoke sections, English and Arabic with full right-to-left support. Shown here as captures of the live storefront.',
     url: null, // Shopify stores cannot be embedded, so the open view shows captured pages and has no link
+    scrub: { dir: 'assets/tessera/scrub/', count: 202, maxScroll: 8012 }, // smooth recording of the store scrolling, played back as you scroll
     frames: Array.from({ length: 11 }, (_, i) => `assets/tessera/f${String(i).padStart(2, '0')}.jpg`),
   },
 };
@@ -85,6 +86,8 @@ function openProject(id) {
     iframe.src = p.url;
     iframe.title = p.title + ' live site';
     viewport.replaceChildren(iframe);
+  } else if (p.scrub) {
+    viewport.replaceChildren(createScrubber(p.scrub, p.title));
   } else if (p.frames) {
     const shots = document.createElement('div');
     shots.className = 'shots';
@@ -132,3 +135,59 @@ document.querySelectorAll('[data-open]').forEach((btn) => {
 closeBtn.addEventListener('click', closeProject);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !project.hidden) closeProject(); });
 window.addEventListener('resize', () => { if (!project.hidden) setRect(fullRect()); });
+
+// Plays a pre-recorded scroll of a site: the frame shown follows the scroll position, so the
+// page's own scroll animations (fades, pinned zooms) move exactly as they do on the real site.
+function createScrubber({ dir, count, maxScroll }, title) {
+  const el = document.createElement('div');
+  el.className = 'scrub';
+  el.tabIndex = 0;
+  el.setAttribute('role', 'img');
+  el.setAttribute('aria-label', title + ' storefront. Scroll to browse the page.');
+  const track = document.createElement('div');
+  track.className = 'scrub-track';
+  const stage = document.createElement('div');
+  stage.className = 'scrub-stage';
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 768;
+  const hint = document.createElement('span');
+  hint.className = 'scrub-hint';
+  hint.textContent = 'Scroll ↓';
+  stage.append(canvas, hint);
+  el.append(track, stage);
+
+  const ctx = canvas.getContext('2d');
+  const imgs = Array.from({ length: count }, (_, i) => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => { if (i === shown || shown < 0) paint(shown < 0 ? 0 : shown); };
+    img.src = `${dir}s${String(i).padStart(3, '0')}.webp`;
+    return img;
+  });
+  let shown = -1;
+  function paint(i) { // draw the wanted frame, or the nearest one that has loaded
+    for (let d = 0; d < count; d++) {
+      for (const k of [i - d, i + d]) {
+        const img = imgs[k];
+        if (img && img.complete && img.naturalWidth) { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); shown = i; return; }
+      }
+    }
+  }
+  function frameAt() {
+    const range = track.offsetHeight - el.clientHeight;
+    return range > 0 ? Math.round((el.scrollTop / range) * (count - 1)) : 0;
+  }
+  function size() { // scrolling distance matches the real page at the width it is shown at
+    const shownWidth = Math.min(el.clientWidth, (el.clientHeight * 4) / 3);
+    track.style.height = Math.round(maxScroll * (shownWidth / 1280) + el.clientHeight) + 'px';
+  }
+  let raf = 0;
+  el.addEventListener('scroll', () => {
+    hint.classList.add('gone');
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => paint(frameAt()));
+  });
+  new ResizeObserver(() => { size(); paint(frameAt()); }).observe(el);
+  return el;
+}
