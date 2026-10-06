@@ -8,8 +8,9 @@ const PROJECTS = {
   },
   tessera: {
     title: 'Tessera',
-    desc: 'A custom Shopify theme for the Tessera storefront: woven coverlets, tailored collections and bespoke packaging.',
-    url: null, // not published yet
+    desc: 'Online store for an Egyptian luxury bed and bath linen house: a custom Shopify theme with about thirty bespoke sections, English and Arabic with full right-to-left support. Shown here as captures of the live storefront.',
+    url: null, // Shopify stores cannot be embedded, so the open view shows captured pages and has no link
+    frames: Array.from({ length: 11 }, (_, i) => `assets/tessera/f${String(i).padStart(2, '0')}.jpg`),
   },
 };
 
@@ -36,7 +37,7 @@ try {
         palette: { body: 0x1b2025, back: 0x12181e, bezel: 0x0f1419, accent: 0xa88c68, knob: 0xe1c19a, slot: 0x090e14 },
       },
       {
-        id: 'tessera', title: 'Tessera', label: 'TESSERA', sub: 'COMING SOON',
+        id: 'tessera', title: 'Tessera', frames: PROJECTS.tessera.frames,
         // Tessera brand palette: stone #C9C0B0, forest #363C31, burgundy #33161A, plum-black #211415
         palette: {
           body: 0x33161a, back: 0x211415, bezel: 0x211415, accent: 0xc9c0b0, knob: 0xc9c0b0, slot: 0x150b0c,
@@ -84,6 +85,17 @@ function openProject(id) {
     iframe.src = p.url;
     iframe.title = p.title + ' live site';
     viewport.replaceChildren(iframe);
+  } else if (p.frames) {
+    const shots = document.createElement('div');
+    shots.className = 'shots';
+    p.frames.forEach((src, i) => {
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = i === 0 ? p.title + ' storefront, top of the home page' : '';
+      img.loading = i < 2 ? 'eager' : 'lazy';
+      shots.append(img);
+    });
+    viewport.replaceChildren(shots);
   } else {
     const note = document.createElement('div');
     note.className = 'soon';

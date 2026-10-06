@@ -116,9 +116,15 @@ export function createTvs(container, tvConfigs, { onPress }) {
 
     // the screen: a see-through hole for a live site, or a painted texture
     const screenZ = frontZ + 0.03;
+    // a TV can show: a live site (see-through hole + iframe), a set of captured frames (cycled), or a painted label
+    const frameTextures = cfg.frames ? cfg.frames.map((url) => {
+      const tex = new THREE.TextureLoader().load(url, () => { dirty = true; });
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }) : null;
     const screenMat = cfg.siteUrl
       ? hole
-      : new THREE.MeshBasicMaterial({ map: labelTexture(cfg.label, cfg.sub, pal), side: THREE.DoubleSide });
+      : new THREE.MeshBasicMaterial({ map: frameTextures ? frameTextures[0] : labelTexture(cfg.label, cfg.sub, pal), side: THREE.DoubleSide });
     const screen = new THREE.Mesh(new THREE.ShapeGeometry(rrect(SCREEN.w, SCREEN.h, SCREEN.r), 24), screenMat);
     screen.position.set(SCREEN.x, SCREEN.y, screenZ);
     if (!cfg.siteUrl) { // ShapeGeometry UVs are in shape units; remap to 0..1 for the texture
@@ -126,6 +132,15 @@ export function createTvs(container, tvConfigs, { onPress }) {
       for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / SCREEN.w + 0.5, uv.getY(i) / SCREEN.h + 0.5);
     }
     g.add(screen);
+    if (frameTextures && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      let shown = 0; // flip through the captured pages, like someone browsing the site
+      setInterval(() => {
+        shown = (shown + 1) % frameTextures.length;
+        screenMat.map = frameTextures[shown];
+        screenMat.needsUpdate = true;
+        dirty = true;
+      }, 3200);
+    }
 
     const glare = new THREE.Mesh(
       new THREE.PlaneGeometry(SCREEN.w, SCREEN.h),

@@ -78,3 +78,6 @@ footer { text-align: center; padding: 1.5rem 1rem 2rem; color: var(--muted); bor
   padding: .6rem 1.1rem; cursor: pointer; font: inherit; letter-spacing: .06em;
 }
 .open-row button:hover, .open-row button:focus-visible { border-color: var(--teal); color: var(--teal); outline: none; }
+
+.shots { height: 100%; overflow-y: auto; background: #0f0b0c; }
+.shots img { display: block; width: 100%; height: auto; }
