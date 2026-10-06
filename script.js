@@ -87,7 +87,7 @@ function openProject(id) {
     iframe.title = p.title + ' live site';
     viewport.replaceChildren(iframe);
   } else if (p.scrub) {
-    viewport.replaceChildren(createScrubber(p.scrub, p.title));
+    viewport.replaceChildren(createScrubber(p.scrub, p.title, p.frames[0]));
   } else if (p.frames) {
     const shots = document.createElement('div');
     shots.className = 'shots';
@@ -136,9 +136,63 @@ closeBtn.addEventListener('click', closeProject);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !project.hidden) closeProject(); });
 window.addEventListener('resize', () => { if (!project.hidden) setRect(fullRect()); });
 
+// Downloads the recorded frames of a site without blocking the page. Coarse frames (every 8th) come
+// first so scrubbing works immediately; the rest are fetched nearest-to-the-viewer first, a few at a
+// time. On a slow link or with data-saver on, only frames close to the viewer are fetched.
+const loaders = new Map();
+function getFrameLoader({ dir, count }) {
+  if (loaders.has(dir)) return loaders.get(dir);
+  const imgs = new Array(count).fill(null); // an Image once it has been requested
+  const listeners = new Set();
+  const conn = navigator.connection || {};
+  const lean = !!conn.saveData || /(^|-)(slow-2g|2g|3g)$/.test(conn.effectiveType || '');
+  const MAX = lean ? 2 : 4;
+  const COARSE = 8;
+  let focus = 0, active = 0, started = false;
+  const url = (i) => `${dir}s${String(i).padStart(3, '0')}.webp`;
+  function next() {
+    for (let i = 0; i < count; i += COARSE) if (!imgs[i]) return i;
+    let best = -1, bestDist = Infinity;
+    for (let i = 0; i < count; i++) if (!imgs[i] && Math.abs(i - focus) < bestDist) { best = i; bestDist = Math.abs(i - focus); }
+    return lean && bestDist > 6 ? -1 : best;
+  }
+  function pump() {
+    while (active < MAX) {
+      const i = next();
+      if (i < 0) return;
+      const img = new Image();
+      img.decoding = 'async';
+      imgs[i] = img;
+      active++;
+      const done = () => { active--; listeners.forEach((fn) => fn(i)); pump(); };
+      img.onload = done;
+      img.onerror = done;
+      img.src = url(i);
+    }
+  }
+  const api = {
+    imgs,
+    start() { if (!started) { started = true; pump(); } },
+    setFocus(i) { focus = i; if (started) pump(); },
+    onLoad(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+    has(i) { const im = imgs[i]; return !!(im && im.complete && im.naturalWidth); },
+  };
+  loaders.set(dir, api);
+  return api;
+}
+
+// Start fetching the Tessera recording quietly once the page has settled, so opening it is instant.
+function warmUp() {
+  const go = () => setTimeout(() => getFrameLoader(PROJECTS.tessera.scrub).start(), 1500);
+  if (document.readyState === 'complete') go(); else window.addEventListener('load', go, { once: true });
+}
+warmUp();
+
 // Plays a pre-recorded scroll of a site: the frame shown follows the scroll position, so the
 // page's own scroll animations (fades, pinned zooms) move exactly as they do on the real site.
-function createScrubber({ dir, count, maxScroll }, title) {
+function createScrubber(cfg, title, placeholderSrc) {
+  const { count, maxScroll } = cfg;
+  const loader = getFrameLoader(cfg);
   const el = document.createElement('div');
   el.className = 'scrub';
   el.tabIndex = 0;
@@ -159,29 +213,20 @@ function createScrubber({ dir, count, maxScroll }, title) {
 
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingQuality = 'high';
-  const imgs = Array.from({ length: count }, (_, i) => {
-    const img = new Image();
-    img.decoding = 'async';
-    img.onload = () => { if (i === shown || shown < 0) paint(shown < 0 ? 0 : shown); };
-    return img;
-  });
-  let shown = -1;
-  // download coarse to fine (every 16th frame, then 8th, 4th, 2nd, the rest) so scrolling works
-  // straight away on sparse frames and sharpens as the in-between frames arrive
-  const order = [];
-  const queued = new Set();
-  for (const stride of [16, 8, 4, 2, 1]) {
-    for (let i = 0; i < count; i += stride) if (!queued.has(i)) { queued.add(i); order.push(i); }
-  }
-  order.forEach((i) => { imgs[i].src = `${dir}s${String(i).padStart(3, '0')}.webp`; });
+  // the first still is already in the browser cache from the TV on the wall, so there is never an empty frame
+  const placeholder = new Image();
+  placeholder.src = placeholderSrc;
+  let want = 0, drawn = false;
+  function draw(img) { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); drawn = true; }
   function paint(i) { // draw the wanted frame, or the nearest one that has loaded
+    want = i;
     for (let d = 0; d < count; d++) {
-      for (const k of [i - d, i + d]) {
-        const img = imgs[k];
-        if (img && img.complete && img.naturalWidth) { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); shown = i; return; }
-      }
+      for (const k of [i - d, i + d]) if (k >= 0 && k < count && loader.has(k)) { draw(loader.imgs[k]); return; }
     }
+    if (!drawn && placeholder.complete && placeholder.naturalWidth) draw(placeholder);
   }
+  placeholder.onload = () => { if (!drawn) paint(want); };
+  const off = loader.onLoad((k) => { if (!el.isConnected) { off(); return; } if (Math.abs(k - want) <= 8) paint(want); });
   function frameAt() {
     const range = track.offsetHeight - el.clientHeight;
     return range > 0 ? Math.round((el.scrollTop / range) * (count - 1)) : 0;
@@ -194,8 +239,10 @@ function createScrubber({ dir, count, maxScroll }, title) {
   el.addEventListener('scroll', () => {
     hint.classList.add('gone');
     cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(() => paint(frameAt()));
+    raf = requestAnimationFrame(() => { const i = frameAt(); loader.setFocus(i); paint(i); });
   });
   new ResizeObserver(() => { size(); paint(frameAt()); }).observe(el);
+  loader.start(); // no-op if the background warm-up already began
+  paint(0);
   return el;
 }
