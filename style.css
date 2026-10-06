@@ -93,3 +93,13 @@ footer { text-align: center; padding: 1.5rem 1rem 2rem; color: var(--muted); bor
   padding: .35rem .9rem; border-radius: 999px; font-size: .8rem; letter-spacing: .08em; transition: opacity .4s;
 }
 .scrub-hint.gone { opacity: 0; }
+
+.pages { height: 100%; display: flex; flex-direction: column; }
+.pages-tabs { display: flex; gap: .4rem; padding: .5rem .8rem; background: #1a1012; border-bottom: 1px solid #33161a; overflow-x: auto; }
+.pages-tabs button {
+  background: transparent; color: #c9c0b0; border: 1px solid #33161a; border-radius: 999px;
+  padding: .3rem .9rem; font: inherit; font-size: .8rem; letter-spacing: .06em; cursor: pointer; white-space: nowrap;
+}
+.pages-tabs button[aria-selected="true"] { background: #c9c0b0; color: #211415; border-color: #c9c0b0; }
+.pages-tabs button:hover:not([aria-selected="true"]) { border-color: #c9c0b0; }
+.pages-view { flex: 1; min-height: 0; }

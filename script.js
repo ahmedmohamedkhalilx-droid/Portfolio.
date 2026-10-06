@@ -8,9 +8,14 @@ const PROJECTS = {
   },
   tessera: {
     title: 'Tessera',
-    desc: 'Online store for an Egyptian luxury bed and bath linen house: a custom Shopify theme with about thirty bespoke sections, English and Arabic with full right-to-left support. Shown here as captures of the live storefront.',
+    desc: 'Online store for an Egyptian luxury bed and bath linen house: a custom Shopify theme with about thirty bespoke sections, English and Arabic with full right-to-left support. Shown here as recordings of the live storefront: the home page, the Bed Linen collection and a set page.',
     url: null, // Shopify stores cannot be embedded, so the open view shows captured pages and has no link
-    scrub: { dir: 'assets/tessera/scrub/', count: 202, maxScroll: 8012 }, // smooth recording of the store scrolling, played back as you scroll
+    // smooth recordings of the live store scrolling, played back as you scroll; one per page
+    pages: [
+      { label: 'Home', scrub: { dir: 'assets/tessera/scrub/', count: 202, maxScroll: 8012 } },
+      { label: 'Bed Linen', scrub: { dir: 'assets/tessera/beddings/', count: 87, maxScroll: 3435 } },
+      { label: 'Signature set', scrub: { dir: 'assets/tessera/signature/', count: 40, maxScroll: 1546 } },
+    ],
     frames: Array.from({ length: 11 }, (_, i) => `assets/tessera/f${String(i).padStart(2, '0')}.jpg`),
   },
 };
@@ -86,8 +91,8 @@ function openProject(id) {
     iframe.src = p.url;
     iframe.title = p.title + ' live site';
     viewport.replaceChildren(iframe);
-  } else if (p.scrub) {
-    viewport.replaceChildren(createScrubber(p.scrub, p.title, p.frames[0]));
+  } else if (p.pages) {
+    viewport.replaceChildren(createPages(p));
   } else if (p.frames) {
     const shots = document.createElement('div');
     shots.className = 'shots';
@@ -183,7 +188,7 @@ function getFrameLoader({ dir, count }) {
 
 // Start fetching the Tessera recording quietly once the page has settled, so opening it is instant.
 function warmUp() {
-  const go = () => setTimeout(() => getFrameLoader(PROJECTS.tessera.scrub).start(), 1500);
+  const go = () => setTimeout(() => getFrameLoader(PROJECTS.tessera.pages[0].scrub).start(), 1500);
   if (document.readyState === 'complete') go(); else window.addEventListener('load', go, { once: true });
 }
 warmUp();
@@ -245,4 +250,33 @@ function createScrubber(cfg, title, placeholderSrc) {
   loader.start(); // no-op if the background warm-up already began
   paint(0);
   return el;
+}
+
+// A tab per recorded page of the site; each tab plays that page's scroll recording.
+function createPages(p) {
+  const wrap = document.createElement('div');
+  wrap.className = 'pages';
+  const tabs = document.createElement('div');
+  tabs.className = 'pages-tabs';
+  tabs.setAttribute('role', 'tablist');
+  const view = document.createElement('div');
+  view.className = 'pages-view';
+  const buttons = p.pages.map((page, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'tab');
+    b.textContent = page.label;
+    b.addEventListener('click', () => select(i));
+    tabs.append(b);
+    return b;
+  });
+  function select(i) {
+    buttons.forEach((b, k) => b.setAttribute('aria-selected', String(k === i)));
+    const page = p.pages[i];
+    const placeholder = i === 0 ? p.frames[0] : page.scrub.dir + 's000.webp'; // the home still is already cached from the TV
+    view.replaceChildren(createScrubber(page.scrub, p.title + ' ' + page.label, placeholder));
+  }
+  wrap.append(tabs, view);
+  select(0);
+  return wrap;
 }
