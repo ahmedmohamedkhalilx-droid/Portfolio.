@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 // Procedural retro TVs. A TV with a `siteUrl` shows that live site as a real iframe placed on
 // the screen by the CSS3D renderer (below the canvas); its screen mesh punches a transparent
@@ -73,6 +74,9 @@ export function createTvs(container, tvConfigs, { onPress }) {
   const gl = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   gl.shadowMap.enabled = true;
+  gl.shadowMap.type = THREE.PCFSoftShadowMap;
+  gl.toneMapping = THREE.ACESFilmicToneMapping; // film-like highlight roll-off instead of clipped whites
+  gl.toneMappingExposure = 1.05;
   const css = new CSS3DRenderer();
   for (const el of [css.domElement, gl.domElement]) {
     el.style.position = 'absolute';
@@ -88,12 +92,26 @@ export function createTvs(container, tvConfigs, { onPress }) {
   function buildTv(cfg) {
     const g = new THREE.Group();
     const pal = cfg.palette; // each TV wears its website's colours
-    const bodyMat = new THREE.MeshStandardMaterial({ color: pal.body, roughness: 0.55, metalness: 0.15 });
-    const backMat = new THREE.MeshStandardMaterial({ color: pal.back, roughness: 0.7, metalness: 0.1 });
-    const bezelMat = new THREE.MeshStandardMaterial({ color: pal.bezel, roughness: 0.4, metalness: 0.2 });
-    const chrome = new THREE.MeshStandardMaterial({ color: pal.knob, roughness: 0.3, metalness: 0.85 });
-    const tan = new THREE.MeshStandardMaterial({ color: pal.accent, roughness: 0.4, metalness: 0.7 });
-    const black = new THREE.MeshStandardMaterial({ color: pal.slot, roughness: 0.8 });
+    // Physically based materials: roughness decides how sharp reflections are, metalness whether the colour
+    // tints them (metal) or sits underneath a clear reflection (dielectric plastic / lacquer).
+    const bodyMat = new THREE.MeshPhysicalMaterial({   // satin lacquered cabinet
+      color: pal.body, roughness: 0.42, metalness: 0, clearcoat: 0.6, clearcoatRoughness: 0.28, envMapIntensity: 0.7,
+    });
+    const backMat = new THREE.MeshStandardMaterial({   // matte moulded plastic
+      color: pal.back, roughness: 0.78, metalness: 0, envMapIntensity: 0.4,
+    });
+    const bezelMat = new THREE.MeshPhysicalMaterial({  // glossy black bezel around the glass
+      color: pal.bezel, roughness: 0.3, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.12, envMapIntensity: 0.9,
+    });
+    const chrome = new THREE.MeshStandardMaterial({    // polished metal knobs
+      color: pal.knob, roughness: 0.24, metalness: 1, envMapIntensity: 1.1,
+    });
+    const tan = new THREE.MeshStandardMaterial({       // satin brass trim
+      color: pal.accent, roughness: 0.34, metalness: 1, envMapIntensity: 1,
+    });
+    const black = new THREE.MeshStandardMaterial({     // rubber feet and speaker slots
+      color: pal.slot, roughness: 0.92, metalness: 0, envMapIntensity: 0.2,
+    });
 
     const body = new THREE.Mesh(new RoundedBoxGeometry(BODY.w, BODY.h, BODY.d, 5, 0.28), bodyMat);
     body.castShadow = true;
@@ -125,7 +143,7 @@ export function createTvs(container, tvConfigs, { onPress }) {
     }) : null;
     const screenMat = cfg.siteUrl
       ? hole
-      : new THREE.MeshBasicMaterial({ map: frameTextures ? frameTextures[0] : labelTexture(cfg.label, cfg.sub, pal), side: THREE.DoubleSide });
+      : new THREE.MeshBasicMaterial({ map: frameTextures ? frameTextures[0] : labelTexture(cfg.label, cfg.sub, pal), side: THREE.DoubleSide, toneMapped: false });
     const screen = new THREE.Mesh(new THREE.ShapeGeometry(rrect(SCREEN.w, SCREEN.h, SCREEN.r), 24), screenMat);
     screen.position.set(SCREEN.x, SCREEN.y, screenZ);
     if (!cfg.siteUrl) { // ShapeGeometry UVs are in shape units; remap to 0..1 for the texture
@@ -145,7 +163,7 @@ export function createTvs(container, tvConfigs, { onPress }) {
 
     const glare = new THREE.Mesh(
       new THREE.PlaneGeometry(SCREEN.w, SCREEN.h),
-      new THREE.MeshBasicMaterial({ map: gloss, transparent: true, depthWrite: false, opacity: 0.35 })
+      new THREE.MeshBasicMaterial({ map: gloss, transparent: true, depthWrite: false, opacity: 0.3, toneMapped: false })
     );
     glare.position.set(SCREEN.x, SCREEN.y, screenZ + 0.005);
     g.add(glare);
@@ -251,14 +269,20 @@ export function createTvs(container, tvConfigs, { onPress }) {
   const tvs = tvConfigs.map(buildTv);
   tvs.forEach((t) => row.add(t.group));
 
-  scene.add(new THREE.HemisphereLight(0xcfe3d8, 0x0a0e0c, 1.1));
-  const key = new THREE.DirectionalLight(0xffffff, 2.4);
+  // studio environment: gives metals and clearcoat something to reflect
+  const pmrem = new THREE.PMREMGenerator(gl);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x14181a, 0.35));
+  const key = new THREE.DirectionalLight(0xfff3e4, 1.9); // warm key from the upper left front
   key.position.set(-6, 10, 12);
   key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
+  key.shadow.bias = -0.0004;
+  key.shadow.normalBias = 0.03;
+  key.shadow.radius = 4;
   Object.assign(key.shadow.camera, { left: -18, right: 18, top: 18, bottom: -18, near: 1, far: 60 });
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0x6fb59c, 1.6);
+  const rim = new THREE.DirectionalLight(0xdfe8f2, 0.7); // faint neutral-cool edge light from behind
   rim.position.set(8, 3, -7);
   scene.add(rim);
 
