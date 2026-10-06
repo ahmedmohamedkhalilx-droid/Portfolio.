@@ -12,6 +12,8 @@ const BODY = { w: 8, h: 6, d: 5 };
 const SCREEN = { w: 5.2, h: 3.9, x: -0.95, y: 0.15, r: 0.45 };
 const FRAME_PX = { w: 1280, h: 960 }; // the iframe's size; its aspect matches SCREEN
 const HOVER_SCALE = 1.12;
+const FOOT = { h: 0.35, drop: 0.12 }; // foot height, and how far its centre sits below the cabinet bottom
+const FOOT_REACH = FOOT.drop + FOOT.h / 2; // the lowest point of a foot, below the cabinet bottom
 
 function rrect(w, h, r) {
   const s = new THREE.Shape();
@@ -218,8 +220,8 @@ export function createTvs(container, tvConfigs, { onPress }) {
     g.add(strip);
 
     [[-3, -1.6], [3, -1.6], [-3, 1.6], [3, 1.6]].forEach(([x, z]) => {
-      const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.34, 0.35, 20), black);
-      foot.position.set(x, -BODY.h / 2 - 0.12, z);
+      const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.34, FOOT.h, 20), black);
+      foot.position.set(x, -BODY.h / 2 - FOOT.drop, z);
       foot.castShadow = true;
       g.add(foot);
     });
@@ -290,7 +292,7 @@ export function createTvs(container, tvConfigs, { onPress }) {
   function layout(aspect) {
     const n = tvs.length;
     const stacked = aspect < 1.1; // a tall canvas (phones): the TVs sit on top of each other
-    const FEET = 0.47;            // feet height, so the upper TV stands on the one below
+    const FEET = FOOT_REACH - 0.004; // the upper TV's feet end exactly on the lower TV's top (a hair of sink so it truly rests)
     const stepX = BODY.w + 0.04;  // blocks touching, a hair of air avoids z-fighting
     const stepY = BODY.h + FEET;
     tvs.forEach((t, i) => {
